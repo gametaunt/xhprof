@@ -225,7 +225,7 @@ CREATE TABLE `details` (
   public function getHardHit($criteria)
   {
     //call thing to get runs
-    $criteria['select'] = "distinct(`{$criteria['type']}`), count(`{$criteria['type']}`) AS `count` , sum(`wt`) as total_wall, avg(`wt`) as avg_wall";
+    $criteria['select'] = "distinct(`{$criteria['type']}`) AS `{$criteria['type']}`, count(`{$criteria['type']}`) AS `count` , sum(`wt`) as total_wall, avg(`wt`) as avg_wall";
     unset($criteria['type']);
     $criteria['where'] = $this->db->dateSub($criteria['days']) . " <= `timestamp`";
     unset($criteria['days']);
@@ -261,15 +261,15 @@ CREATE TABLE `details` (
   public function get_run($run_id, $type, &$run_desc) 
   {
     $run_id = $this->db->escape($run_id);
-    $query = "SELECT * FROM `details` WHERE `id` = '$run_id'";
+    $query = "SELECT `id`, `url`, `c_url`, `timestamp`, `server name`, UNCOMPRESS(`perfdata`) AS `perfdata`, `type`, `cookie`, `post`, `get`, `pmu`, `wt`, `cpu`, `server_id`, `aggregateCalls_include` FROM `details` WHERE `id` = '$run_id'";
     $resultSet = $this->db->query($query);
     $data = $this->db->getNextAssoc($resultSet);
-    
+
     //The Performance data is compressed lightly to avoid max row length
 	if (!isset($GLOBALS['_xhprof']['serializer']) || strtolower($GLOBALS['_xhprof']['serializer'] == 'php')) {
-		$contents = unserialize(gzuncompress($data['perfdata']));
+		$contents = unserialize($data['perfdata']);
 	} else {
-		$contents = json_decode(gzuncompress($data['perfdata']), true);
+		$contents = json_decode($data['perfdata'], true);
 	}
     
     //This data isnt' needed for display purposes, there's no point in keeping it in this array
@@ -300,7 +300,7 @@ CREATE TABLE `details` (
   */
   public function getUrlStats($data)
   {
-      $data['select'] = '`id`, '.$this->db->unixTimestamp(`timestamp`).' as `timestamp`, `pmu`, `wt`, `cpu`';   
+      $data['select'] = "`id`, ".$this->db->unixTimestamp("`timestamp`")." as `timestamp`, `pmu`, `wt`, `cpu`";   
       $rs = $this->getRuns($data);
       return $rs;
   }
@@ -431,9 +431,9 @@ CREATE TABLE `details` (
 		// The value of 2 seems to be light enugh that we're not killing the server, but still gives us lots of breathing room on 
 		// full production code. 
 		if (!isset($GLOBALS['_xhprof']['serializer']) || strtolower($GLOBALS['_xhprof']['serializer'] == 'php')) {
-			$sql['data'] = $this->db->escape(gzcompress(serialize($xhprof_data), 2));
+			$sql['data'] = $this->db->escape(serialize($xhprof_data));
 		} else {
-			$sql['data'] = $this->db->escape(gzcompress(json_encode($xhprof_data), 2));
+			$sql['data'] = $this->db->escape(json_encode($xhprof_data));
 		}
 			
         
@@ -448,8 +448,8 @@ CREATE TABLE `details` (
 	$sql['server_id'] = $this->db->escape($_xhprof['servername']);
         $sql['aggregateCalls_include'] = getenv('xhprof_aggregateCalls_include') ? getenv('xhprof_aggregateCalls_include') : '';
         
-        $query = "INSERT INTO `details` (`id`, `url`, `c_url`, `timestamp`, `server name`, `perfdata`, `type`, `cookie`, `post`, `get`, `pmu`, `wt`, `cpu`, `server_id`, `aggregateCalls_include`) VALUES('$run_id', '{$sql['url']}', '{$sql['c_url']}', FROM_UNIXTIME('{$sql['timestamp']}'), '{$sql['servername']}', '{$sql['data']}', '{$sql['type']}', '{$sql['cookie']}', '{$sql['post']}', '{$sql['get']}', '{$sql['pmu']}', '{$sql['wt']}', '{$sql['cpu']}', '{$sql['server_id']}', '{$sql['aggregateCalls_include']}')";
-        
+        $query = "INSERT INTO `details` (`id`, `url`, `c_url`, `timestamp`, `server name`, `perfdata`, `type`, `cookie`, `post`, `get`, `pmu`, `wt`, `cpu`, `server_id`, `aggregateCalls_include`) VALUES('$run_id', '{$sql['url']}', '{$sql['c_url']}', FROM_UNIXTIME('{$sql['timestamp']}'), '{$sql['servername']}', COMPRESS('{$sql['data']}'), '{$sql['type']}', '{$sql['cookie']}', '{$sql['post']}', '{$sql['get']}', '{$sql['pmu']}', '{$sql['wt']}', '{$sql['cpu']}', '{$sql['server_id']}', '{$sql['aggregateCalls_include']}')";
+
         $this->db->query($query);
         if ($this->db->affectedRows($this->db->linkID) == 1)
         {
