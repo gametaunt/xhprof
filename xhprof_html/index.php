@@ -135,7 +135,8 @@ if(isset($_GET['run1']) || isset($_GET['run']))
     
     $criteria['order by'] = $load;
     $criteria['limit'] = "500";
-    $criteria['where'] = "DATE_SUB(CURDATE(), INTERVAL $days DAY) <= `timestamp`";
+    $class = "Db_".$_xhprof['dbadapter'];
+    $criteria['where'] = $class::dateSub($days)." <= `timestamp`";
     $rs = $xhprof_runs_impl->getRuns($criteria);
     displayRuns($rs, "Worst runs by $load");
 }elseif(isset($_GET['hit']))
