@@ -3,11 +3,11 @@ $_xhprof = array();
 
 // Change these:
 $_xhprof['dbtype'] = 'mysql'; // Only relevant for PDO
-$_xhprof['dbhost'] = 'localhost';
-$_xhprof['dbuser'] = 'root';
-$_xhprof['dbpass'] = 'password';
-$_xhprof['dbname'] = 'xhprof';
-$_xhprof['dbadapter'] = 'Pdo';
+$_xhprof['dbhost'] = 'localhost';//not relevant for sqlite
+$_xhprof['dbuser'] = 'root';//not relevant for sqlite
+$_xhprof['dbpass'] = 'password';//not relevant for sqlite
+$_xhprof['dbname'] = '/tmp/xhprof';
+$_xhprof['dbadapter'] = 'Sqlite';
 $_xhprof['servername'] = 'myserver';
 $_xhprof['namespace'] = 'myapp';
 $_xhprof['url'] = 'http://url/to/xhprof/xhprof_html';
